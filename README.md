@@ -38,8 +38,30 @@ Three agents, each doing one clear job:
 - Recommended orders under ₦100,000 are treated as auto-approvable
 - Orders at or above ₦100,000 are flagged for the owner's approval — no purchase is ever placed autonomously
 
-See `architecture.png` (or `.md` diagram) for the full data flow.
+```mermaid
+flowchart TD
+    A[Customer Enquiry Text] --> B[Agent 1+2: Intake & Qualification]
+    B --> C[extract_product_keyword]
+    C --> D[find_price]
+    D --> E[map_keyword_to_tier]
+    E --> F[qualify_enquiry]
+    F --> G{Qualified?}
+    G -->|Yes| H[Flag for follow-up]
+    G -->|No / Unsupported brand| I[No action]
 
+    J[Supabase: enquiries table] --> K[Agent 3: Restock Recommendation]
+    K --> L[count_weekly_enquiries_by_category]
+    L --> M[recommend_restock]
+    M --> N{Stock data available?}
+    N -->|Yes| O[Check stock level]
+    N -->|No - current state| P[Use enquiry volume vs threshold]
+    O --> Q{Restock needed?}
+    P --> Q
+    Q -->|Yes| R{Order value}
+    R -->|Under ₦100,000| S[Auto-approve]
+    R -->|₦100,000 or more| T[Escalate to owner]
+    Q -->|No| U[No restock flagged]
+```
 ## Current Scope
 
 This is a working, honestly-scoped v1, not a finished commercial product:
